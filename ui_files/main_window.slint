@@ -1,0 +1,89 @@
+import { VerticalBox, HorizontalBox, Button, LineEdit, TextEdit, ListView } from "std-widgets.slint";
+
+export component MainWindow inherits Window {
+    title: "NoteQuarry - Your Personal Journal";
+    preferred-width: 1000px;
+    preferred-height: 700px;
+
+    // Callbacks for Rust
+    callback create-journal(string);
+    callback select-journal(int);
+    callback save-entry(string, string);
+
+    // Properties
+    in-out property <string> current-journal-title: "My Journal";
+    in-out property <[string]> journal-list: ["Journal 1", "Journal 2"];
+
+    HorizontalBox {
+        // Sidebar
+        VerticalBox {
+            width: 250px;
+            padding: 10px;
+
+            Text {
+                text: "Journals";
+                font-size: 18px;
+                font-weight: 700;
+            }
+
+            ListView {
+                for journal[index] in journal-list: Rectangle {
+                    height: 40px;
+                    background: touch.has-hover ? #e0e0e0 : transparent;
+                    
+                    touch := TouchArea {
+                        clicked => {
+                            root.select-journal(index);
+                        }
+                    }
+
+                    Text {
+                        text: journal;
+                        vertical-alignment: center;
+                        horizontal-alignment: left;
+                    }
+                }
+            }
+
+            Button {
+                text: "New Journal";
+                clicked => {
+                    root.create-journal("New Journal");
+                }
+            }
+        }
+
+        // Main Content Area
+        VerticalBox {
+            padding: 20px;
+
+            Text {
+                text: current-journal-title;
+                font-size: 24px;
+                font-weight: 700;
+            }
+
+            HorizontalBox {
+                LineEdit {
+                    placeholder-text: "Entry Title...";
+                }
+            }
+
+            TextEdit {
+                text: "Start writing your thoughts...";
+            }
+
+            HorizontalBox {
+                alignment: end;
+                
+                Button {
+                    text: "Save Entry";
+                    primary: true;
+                    clicked => {
+                        root.save-entry("Title", "Content");
+                    }
+                }
+            }
+        }
+    }
+}
