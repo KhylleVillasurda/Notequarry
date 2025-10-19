@@ -1,3 +1,4 @@
+![NoteQuarry Logo](https://github.com/KhylleVillasurda/Notequarry/tree/67e5ba805367ed7bc937f28e8e18f643b4fa680e/resources/icons)
 # NoteQuarry
 
 **Version:** 1.0  
