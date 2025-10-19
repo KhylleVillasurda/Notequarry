@@ -1,6 +1,5 @@
 <p align="center">
-  <img src="(https://github.com/KhylleVillasurda/Notequarry/blob/8d7c7bbd8d764b865924c871400bbdb20f35ea59/resources/icons/app_icon.png)" alt="NoteQuarry Logo" width="64" height="64" style="vertical-align: middle; margin-right: 10px;">
-  <span style="font-size:2em; vertical-align: middle;"><b>NoteQuarry</b></span>
+  <img src="https://github.com/KhylleVillasurda/Notequarry/blob/7ccf2e36305450523dd0c21aa983cd391c986394/resources/icons/app_icon.png" width="200"/>
 </p>
 
 # NoteQuarry
