@@ -1,4 +1,8 @@
-![NoteQuarry Logo](https://github.com/KhylleVillasurda/Notequarry/tree/67e5ba805367ed7bc937f28e8e18f643b4fa680e/resources/icons)
+<p align="center">
+  <img src="[YOUR_LOGO_URL_HERE](https://github.com/KhylleVillasurda/Notequarry/blob/8d7c7bbd8d764b865924c871400bbdb20f35ea59/resources/icons/app_icon.png)" alt="NoteQuarry Logo" width="64" height="64" style="vertical-align: middle; margin-right: 10px;">
+  <span style="font-size:2em; vertical-align: middle;"><b>NoteQuarry</b></span>
+</p>
+
 # NoteQuarry
 
 **Version:** 1.0  
