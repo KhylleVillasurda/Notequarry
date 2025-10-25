@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://github.com/KhylleVillasurda/Notequarry/blob/7ccf2e36305450523dd0c21aa983cd391c986394/resources/icons/app_icon.png" width="200"/>
+</p>
+
 # NoteQuarry
 
 **Version:** 1.0  
