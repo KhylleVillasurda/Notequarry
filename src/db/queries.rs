@@ -1,7 +1,7 @@
 // src/db/queries.rs
 
 use chrono::Utc;
-use rusqlite::{Connection, Result, params};
+use rusqlite::{Connection, OptionalExtension, Result, params};
 
 /// Entry mode enum
 #[derive(Debug, Clone, PartialEq)]
@@ -120,6 +120,29 @@ pub mod entries {
             ],
         )?;
         Ok(conn.last_insert_rowid())
+    }
+
+    pub mod settings {
+        use super::*;
+
+        /// Get a setting value
+        pub fn get(conn: &Connection, key: &str) -> Result<Option<String>> {
+            conn.query_row(
+                "SELECT value FROM user_settings WHERE key = ?1",
+                params![key],
+                |row| row.get(0),
+            )
+            .optional()
+        }
+
+        /// Set a setting value
+        pub fn set(conn: &Connection, key: &str, value: &str) -> Result<()> {
+            conn.execute(
+                "INSERT OR REPLACE INTO user_settings (key, value) VALUES (?1, ?2)",
+                params![key, value],
+            )?;
+            Ok(())
+        }
     }
 
     /// Get entry by ID
