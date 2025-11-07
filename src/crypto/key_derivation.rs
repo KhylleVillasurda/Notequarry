@@ -4,7 +4,7 @@ use argon2::password_hash::{PasswordHasher, SaltString};
 use argon2::{Algorithm, Argon2, Params, Version};
 use log::info;
 use rand::rngs::OsRng;
-use zeroize::{Zeroize, ZeroizeOnDrop};
+use zeroize::Zeroize;
 
 /// Master encryption key derived from password
 #[derive(Clone)]

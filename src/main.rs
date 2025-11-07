@@ -2,11 +2,11 @@ slint::include_modules!();
 mod crypto;
 mod db;
 
-use chrono::{DateTime, Local, TimeZone};
-use env_logger;
+use chrono::{Local, TimeZone};
 use log::info;
 use std::cell::RefCell;
 use std::rc::Rc;
+//use env_logger;
 
 // Struct to hold current state
 struct AppState {
@@ -79,12 +79,12 @@ fn load_entries_to_ui(ui: &MainWindow, app_state: &Rc<RefCell<AppState>>) {
         }
     }
 }
-
+/*
 fn format_date(timestamp: i64) -> String {
     let datetime = Local.timestamp_opt(timestamp, 0).unwrap();
     datetime.format("%b %d, %Y").to_string()
 }
-
+*/
 fn count_words(text: &str) -> i32 {
     text.split_whitespace().count() as i32
 }
@@ -93,6 +93,7 @@ fn setup_callbacks(ui: &MainWindow, app_state: Rc<RefCell<AppState>>) {
     // Password submitted
     let ui_weak = ui.as_weak();
     let state_clone = app_state.clone();
+
     ui.on_password_submitted(move |password| {
         info!("Password submitted, deriving key...");
         let password_str = password.to_string();
@@ -186,7 +187,7 @@ fn setup_callbacks(ui: &MainWindow, app_state: Rc<RefCell<AppState>>) {
             }
         };
 
-        let mut state = state_clone.borrow_mut();
+        let state = state_clone.borrow_mut();
         let mode = if mode_str == "BOOK" {
             db::EntryMode::Book
         } else {
@@ -400,7 +401,7 @@ fn setup_callbacks(ui: &MainWindow, app_state: Rc<RefCell<AppState>>) {
                 }
             };
 
-            let mut state = state_clone.borrow_mut();
+            let state = state_clone.borrow_mut();
 
             match entry_mode {
                 Some(db::EntryMode::Book) => {
@@ -568,7 +569,42 @@ fn setup_callbacks(ui: &MainWindow, app_state: Rc<RefCell<AppState>>) {
     let ui_weak = ui.as_weak();
     let state_clone = app_state.clone();
     ui.on_page_changed(move |new_page| {
+        info!("=== PAGE NAVIGATION ===");
         info!("Navigating to page {}", new_page);
+
+        let current_content = if let Some(ui) = ui_weak.upgrade() {
+            let content = ui.get_current_content().to_string();
+            let current_pg = ui.get_current_page();
+            info!("Current page {} has {} chars", current_pg, content.len());
+            Some((content, current_pg))
+        } else {
+            None
+        };
+
+        if let Some((content, current_pg)) = current_content {
+            if current_pg != new_page && !content.is_empty() {
+                let (master_key, page_id) = {
+                    let state = state_clone.borrow();
+                    let key = match &state.master_key {
+                        Some(k) => k.clone(),
+                        None => return,
+                    };
+                    (key, state.current_page_id)
+                };
+
+                if let Some(pid) = page_id {
+                    if let Ok(encrypted) = crypto::encrypt(&content, &master_key) {
+                        let state = state_clone.borrow_mut();
+                        if let Ok(mut page) = db::pages::get_by_id(state.db.connection(), pid) {
+                            page.content_encrypted = encrypted;
+                            page.word_count = count_words(&content);
+                            let _ = db::pages::update(state.db.connection(), &page);
+                            info!("✓ Auto-saved page {} before navigation", current_pg);
+                        }
+                    }
+                }
+            }
+        }
 
         let (master_key, entry_id) = {
             let state = state_clone.borrow();
@@ -593,6 +629,11 @@ fn setup_callbacks(ui: &MainWindow, app_state: Rc<RefCell<AppState>>) {
                         match crypto::decrypt(&page.content_encrypted, &master_key) {
                             Ok(plaintext) => {
                                 let word_count = count_words(&plaintext);
+                                info!(
+                                    "✓ Loaded page {} content: {} chars",
+                                    new_page,
+                                    plaintext.len()
+                                );
 
                                 if let Some(ui) = ui_weak.upgrade() {
                                     ui.set_current_page(new_page);
@@ -705,7 +746,7 @@ fn generate_dummy_salt() -> Vec<u8> {
         .as_nanos();
     timestamp.to_le_bytes().to_vec()
 }
-
+/*
 fn get_all_page_contents(conn: &rusqlite::Connection, entry_id: i64) -> String {
     match db::pages::get_by_entry(conn, entry_id) {
         Ok(pages) => pages
@@ -716,7 +757,7 @@ fn get_all_page_contents(conn: &rusqlite::Connection, entry_id: i64) -> String {
         Err(_) => String::new(),
     }
 }
-
+*/
 fn get_all_page_contents_decrypted(
     conn: &rusqlite::Connection,
     entry_id: i64,

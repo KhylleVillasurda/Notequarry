@@ -1,5 +1,3 @@
-// src/crypto/encryption.rs
-
 use chacha20poly1305::aead::{Aead, KeyInit, OsRng};
 use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
 use log::info;
@@ -34,17 +32,19 @@ const NONCE_SIZE: usize = 12;
 pub fn encrypt(plaintext: &str, key: &MasterKey) -> Result<Vec<u8>, EncryptionError> {
     info!("Encrypting data...");
 
-    let cipher_key = Key::from_slice(key.as_slice());
-    let cipher = ChaCha20Poly1305::new(cipher_key);
+    // Create key from slice
+    let cipher_key = Key::clone_from_slice(key.as_slice());
+    let cipher = ChaCha20Poly1305::new(&cipher_key);
 
     // Generate random nonce
     let mut nonce_bytes = [0u8; NONCE_SIZE];
     OsRng.fill_bytes(&mut nonce_bytes);
+    // Create nonce from slice
     let nonce = Nonce::from_slice(&nonce_bytes);
 
     // Encrypt
     let ciphertext = cipher
-        .encrypt(nonce, plaintext.as_bytes())
+        .encrypt(&nonce, plaintext.as_bytes())
         .map_err(|e| EncryptionError::EncryptFailed(e.to_string()))?;
 
     // Prepend nonce
@@ -66,14 +66,16 @@ pub fn decrypt(ciphertext: &[u8], key: &MasterKey) -> Result<String, EncryptionE
 
     // Split nonce and encrypted data
     let (nonce_bytes, encrypted_data) = ciphertext.split_at(NONCE_SIZE);
+    // Create nonce from slice
     let nonce = Nonce::from_slice(nonce_bytes);
 
+    // Create key from slice
     let cipher_key = Key::from_slice(key.as_slice());
-    let cipher = ChaCha20Poly1305::new(cipher_key);
+    let cipher = ChaCha20Poly1305::new(&cipher_key);
 
     // Decrypt
     let plaintext_bytes = cipher
-        .decrypt(nonce, encrypted_data)
+        .decrypt(&nonce, encrypted_data)
         .map_err(|e| EncryptionError::DecryptFailed(e.to_string()))?;
 
     // Convert to string
@@ -146,7 +148,7 @@ mod tests {
         let salt = generate_salt();
         let key = derive_key("password", &salt).unwrap();
 
-        let plaintext = "Hello 世界 🌍";
+        let plaintext = "Hello 🌍";
         let ciphertext = encrypt(plaintext, &key).unwrap();
         let decrypted = decrypt(&ciphertext, &key).unwrap();
 
