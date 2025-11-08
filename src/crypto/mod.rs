@@ -6,5 +6,5 @@ pub mod secure_memory;
 
 // Re-export commonly used items
 pub use encryption::{decrypt, encrypt};
-pub use key_derivation::{MasterKey, derive_key, generate_salt};
+pub use key_derivation::{derive_key, generate_salt, MasterKey};
 //pub use secure_memory::SecureString;

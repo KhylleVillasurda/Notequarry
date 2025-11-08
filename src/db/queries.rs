@@ -1,7 +1,7 @@
 // src/db/queries.rs
 
 use chrono::Utc;
-use rusqlite::{Connection, OptionalExtension, Result, params};
+use rusqlite::{params, Connection, OptionalExtension, Result};
 
 /// Entry mode enum
 #[derive(Debug, Clone, PartialEq)]

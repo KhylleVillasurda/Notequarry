@@ -7,7 +7,7 @@ pub mod schema;
 // Re-export commonly used items
 pub use connection::Database;
 pub use queries::entries::settings;
-pub use queries::{Entry, EntryMode, Note, Page, entries, notes, pages, search};
+pub use queries::{entries, notes, pages, search, Entry, EntryMode, Note, Page};
 pub use schema::initialize_schema;
 
 use log::info;
