@@ -7,13 +7,21 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-# Find Qt6
+# Find Qt6 with MinGW support
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Gui)
 
-# Qt UI library
+# Set compiler to MinGW (Windows users need to install MinGW)
+if(WIN32)
+    set(CMAKE_C_COMPILER "x86_64-w64-mingw32-gcc")
+    set(CMAKE_CXX_COMPILER "x86_64-w64-mingw32-g++")
+endif()
+
+# Qt UI library (with C bridge for Rust)
 add_library(notequarry_ui SHARED
     src/ui/mainwindow.cpp
     src/ui/mainwindow.h
+    src/ui/qt_bridge.cpp
+    src/ui/qt_bridge.h
 )
 
 target_link_libraries(notequarry_ui PUBLIC
@@ -43,14 +51,28 @@ set_target_properties(notequarry_ui PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
 )
 
+set_target_properties(notequarry_qt_test PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
 # Windows-specific: Copy Qt DLLs to output directory
 if(WIN32)
+    # Copy Qt libraries for the Qt executable
     add_custom_command(TARGET notequarry_qt_test POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             $<TARGET_FILE:Qt6::Core>
             $<TARGET_FILE:Qt6::Gui>
             $<TARGET_FILE:Qt6::Widgets>
             $<TARGET_FILE_DIR:notequarry_qt_test>
+    )
+
+    # Also copy DLL for Rust executable
+    add_custom_command(TARGET notequarry_ui POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:Qt6::Core>
+            $<TARGET_FILE:Qt6::Gui>
+            $<TARGET_FILE:Qt6::Widgets>
+            ${CMAKE_BINARY_DIR}/bin
     )
 endif()
 
@@ -59,4 +81,10 @@ install(TARGETS notequarry_ui
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin
+)
+
+# Add rule to build the Rust library
+add_custom_target(build_rust_DEPENDS ON
+    COMMAND ${CMAKE_COMMAND} -B build -S .
+    COMMENT "Building Rust components"
 )
