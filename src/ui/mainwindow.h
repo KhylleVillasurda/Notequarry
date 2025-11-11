@@ -1,4 +1,4 @@
-// mainwindow.h
+// mainwindow.h - FIXED VERSION
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
@@ -13,6 +13,10 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QSpinBox>
+#include <QMenuBar>
+#include <QToolBar>
+#include <QStatusBar>
+#include <QAction>
 #include <memory>
 
 // Forward declarations
@@ -42,6 +46,11 @@ public:
     QString getCurrentContent() const;
     int getCurrentPage() const;
 
+    // View switching (for Rust bridge)
+    void showListView();
+    void showBookEditor();
+    void showNoteEditor();
+
 signals:
     // Main callbacks
     void passwordSubmitted(const QString &password);
@@ -59,7 +68,6 @@ signals:
     void addCheckbox();
 
 private slots:
-    // REMOVED: void onPasswordSubmit();  <- This was never implemented!
     void onNewEntry();
     void onModeDialogAccepted(const QString &mode, const QString &title);
     void onEntryItemClicked(QListWidgetItem *item);
@@ -74,12 +82,22 @@ private slots:
 
 private:
     void setupUI();
-    void setupPasswordDialog();
+    void setupMenuBar();
+    void setupToolBar();
+    void setupStatusBar();
     void setupListView();
     void applyDarkTheme();
+    void updateWindowTitle();
 
     // UI Components
     QStackedWidget *m_stackedWidget;
+    QToolBar *m_toolBar;
+    QStatusBar *m_statusBar;
+
+    // Actions
+    QAction *m_newEntryAction;
+    QAction *m_saveAction;
+    QAction *m_backAction;
 
     // Password Dialog
     PasswordDialog *m_passwordDialog;
@@ -119,6 +137,9 @@ public:
 signals:
     void passwordSubmitted(const QString &password);
 
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
+
 private:
     void accept() override;
 
@@ -126,6 +147,7 @@ private:
     QLabel *m_errorLabel;
     QWidget *m_errorWidget;
     QPushButton *m_unlockButton;
+    QPushButton *m_cancelButton;
 };
 
 // ============ Mode Selection Dialog ============
@@ -139,12 +161,19 @@ public:
 signals:
     void modeSelected(const QString &mode, const QString &title);
 
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
+
 private slots:
     void onBookModeClicked();
     void onNoteModeClicked();
 
 private:
+    void validateAndAccept();
+
     QLineEdit *m_titleInput;
+    QPushButton *m_bookButton;
+    QPushButton *m_noteButton;
 };
 
 // ============ Book Editor ============
@@ -174,7 +203,16 @@ signals:
     void contentChanged(const QString &text);
     void pageChanged(int newPage);
 
+private slots:
+    void onContentChanged();
+    void onPageSpinBoxChanged(int value);
+
 private:
+    void setupUI();
+    void updateNavigationButtons();
+    void updatePageInfo();
+    void updateWordCount();
+
     QLabel *m_titleLabel;
     QTextEdit *m_contentEditor;
     QLabel *m_pageInfoLabel;
@@ -183,9 +221,13 @@ private:
     QPushButton *m_prevButton;
     QPushButton *m_nextButton;
     QPushButton *m_addPageButton;
+    QPushButton *m_backButton;
+    QPushButton *m_saveButton;
+    QPushButton *m_imageButton;
 
     int m_currentPage;
     int m_totalPages;
+    int m_wordCount;
 };
 
 // ============ Note Editor ============
@@ -205,10 +247,21 @@ signals:
     void saveClicked(const QString &content);
     void addCheckbox();
     void insertImage();
+    void contentChanged(const QString &text);
+
+private slots:
+    void onAddCheckboxClicked();
+    void onContentChanged();
 
 private:
+    void setupUI();
+
     QLabel *m_titleLabel;
     QTextEdit *m_contentEditor;
+    QPushButton *m_backButton;
+    QPushButton *m_saveButton;
+    QPushButton *m_checkboxButton;
+    QPushButton *m_imageButton;
 };
 
 #endif // MAINWINDOW_H
