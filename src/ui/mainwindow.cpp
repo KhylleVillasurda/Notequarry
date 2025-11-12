@@ -348,7 +348,7 @@ void MainWindow::applyDarkTheme()
         }
         
         QTextEdit {
-            background-color: #1e1e1e;
+            background-color: #252525;
             border: 2px solid #2d5016;
             border-radius: 6px;
             padding: 12px;
@@ -459,10 +459,10 @@ void MainWindow::setEntryList(const QStringList &entries)
         QWidget *emptyWidget = new QWidget;
         QVBoxLayout *layout = new QVBoxLayout(emptyWidget);
         layout->setAlignment(Qt::AlignCenter);
+        layout->setContentsMargins(40, 60, 40, 60);  // ← ADD PADDING
 
         QLabel *icon = new QLabel("🌱");
         icon->setAlignment(Qt::AlignCenter);
-        icon->setStyleSheet("font-size: 64px;");
 
         QLabel *text1 = new QLabel(tr("No entries yet"));
         text1->setAlignment(Qt::AlignCenter);
@@ -671,17 +671,17 @@ void MainWindow::onBackToList()
 PasswordDialog::PasswordDialog(QWidget *parent)
     : QDialog(parent)
 {
-    setWindowTitle(tr("Unlock NoteQuarry"));
     setModal(true);
     setFixedSize(420, 320);
-    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+    setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
+  //setAttribute(Qt::WA_TranslucentBackground);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setSpacing(20);
     mainLayout->setContentsMargins(40, 40, 40, 40);
 
     // Title
-    QLabel *titleLabel = new QLabel(tr("🔒 Unlock NoteQuarry"));
+    QLabel *titleLabel = new QLabel(tr("NoteQuarry"));
     titleLabel->setAlignment(Qt::AlignCenter);
     titleLabel->setStyleSheet("font-size: 24px; font-weight: 700; color: #a8d08d;");
 
@@ -724,7 +724,47 @@ PasswordDialog::PasswordDialog(QWidget *parent)
     QHBoxLayout *buttonLayout = new QHBoxLayout;
     buttonLayout->setSpacing(10);
 
-    m_cancelButton = new QPushButton(tr("Cancel"));
+    QPushButton *closeButton = new QPushButton("✕");
+    closeButton->setFixedSize(32, 32);
+    closeButton->setStyleSheet(
+        "QPushButton { "
+        "  background-color: transparent; "
+        "  color: #ff6b6b; "
+        "  border: none; "
+        "  border-radius: 16px; "
+        "  font-size: 18px; "
+        "  font-weight: bold; "
+        "} "
+        "QPushButton:hover { "
+        "  background-color: #3d1616; "
+        "}"
+        );
+    connect(closeButton, &QPushButton::clicked, []() {
+        QApplication::quit();
+    });
+
+    // Add to a top bar layout
+    QHBoxLayout *topBar = new QHBoxLayout;
+    topBar->addStretch();
+    topBar->addWidget(closeButton);
+
+    m_cancelButton = new QPushButton(tr("Exit"));
+    m_cancelButton->setStyleSheet(
+        "QPushButton { "
+        "  background-color: #3d1616; "
+        "  color: #ff6b6b; "
+        "  border: 2px solid #ff6b6b; "
+        "  border-radius: 6px; "
+        "  padding: 8px 16px; "
+        "  font-weight: 600; "
+        "} "
+        "QPushButton:hover { "
+        "  background-color: #4d2020; "
+        "}"
+        );
+    connect(m_cancelButton, &QPushButton::clicked, [this]() {
+        QApplication::quit();  // ← Exit the entire app
+    });
     m_unlockButton = new QPushButton(tr("Unlock"));
     m_unlockButton->setObjectName("primaryButton");
     m_unlockButton->setMinimumWidth(100);
@@ -742,6 +782,7 @@ PasswordDialog::PasswordDialog(QWidget *parent)
     infoLabel->setWordWrap(true);
     infoLabel->setStyleSheet("font-size: 12px; color: #5a7a4a;");
 
+    mainLayout->addLayout(topBar);
     mainLayout->addWidget(titleLabel);
     mainLayout->addWidget(subtitleLabel);
     mainLayout->addWidget(separator);
@@ -758,6 +799,9 @@ PasswordDialog::PasswordDialog(QWidget *parent)
             background-color: #1e1e1e;
             border: 2px solid #2d5016;
             border-radius: 12px;
+        QLabel {
+             background-color: transparent;
+    }
         }
     )");
 
@@ -785,15 +829,17 @@ void PasswordDialog::setShowError(bool show)
 
 void PasswordDialog::accept()
 {
-    if (m_passwordInput->text().isEmpty())
+    QString password = m_passwordInput->text().trimmed();
+
+    if (password.isEmpty())
     {
         setErrorMessage(tr("Password cannot be empty"));
         setShowError(true);
-        return;
+        return;  // ← Don't close dialog!
     }
 
-    emit passwordSubmitted(m_passwordInput->text());
-    QDialog::accept();
+    emit passwordSubmitted(password);
+    QDialog::accept();  // ← Only close if password valid
 }
 
 void PasswordDialog::keyPressEvent(QKeyEvent *event)
@@ -901,7 +947,11 @@ ModeSelectionDialog::ModeSelectionDialog(QWidget *parent)
     QHBoxLayout *buttonLayout = new QHBoxLayout;
     QPushButton *cancelButton = new QPushButton(tr("Cancel"));
     cancelButton->setMinimumWidth(80);
-    connect(cancelButton, &QPushButton::clicked, this, &QDialog::reject);
+    connect(cancelButton, &QPushButton::clicked, [this]() {
+        // Do nothing, or show a m  essage that password is required
+        QMessageBox::information(this, tr("Password Required"),
+                                 tr("A password is required to use NoteQuarry."));
+    });
 
     buttonLayout->addStretch();
     buttonLayout->addWidget(cancelButton);
